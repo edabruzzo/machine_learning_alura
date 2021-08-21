@@ -1,0 +1,44 @@
+https://git.cnj.jus.br/ia/docs/-/wikis/Sinapses/In%C3%ADcio#user-content-credenciais
+
+
+
+PRÉ-REQUISITOS ANTES DA INSTALAÇÃO DO PYENV (validação feita no ubuntu 20 )
+
+$ curl https://pyenv.run | bash
+
+$ sudo apt install libedit-dev
+
+
+$ sudo apt-get install -y make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncurses5-dev libncursesw5-dev xz-utils tk-dev
+
+
+- Criar entradas abaixo em ~/.bashrc
+
+export PYENV_ROOT="$HOME/.pyenv"
+export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init --path)"
+eval "$(pyenv init -)"
+eval "$(pyenv virtualenv-init -)"
+
+
+https://github.com/pyenv/pyenv#basic-github-checkout
+
+pyenv install 3.8.0
+$ pyenv virtualenv 3.8.0 alura_deeplearning 
+$ pyenv activate alura_deeplearning
+
+
+LOCALIZACAO DO PROJETO NO GITHUB ALURA:
+
+https://github.com/cassiasamp/keras-tensorflow
+
+
+
+**********MATPLOTLIB
+https://www.pyimagesearch.com/2015/08/24/resolved-matplotlib-figures-not-showing-up-or-displaying/
+
+pip uninstall matplotlib
+$ git clone https://github.com/matplotlib/matplotlib.git
+$ cd matplotlib
+$ python setup.py install
+
