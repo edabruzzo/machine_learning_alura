@@ -97,18 +97,47 @@ modelo = keras.Sequential(
      ])
 
 
-# In[53]:
+layer_1 = modelo.layers[1]
+pesos_camada_dense = layer_1.get_weights()[0]
+vieses_camada_dense = layer_1.get_weights()[1]
 
+pesos_camada_dense_zerados = np.zeros(pesos_camada_dense.shape)
+pesos_camada_dense_aleatorios = np.random.rand(pesos_camada_dense.shape[0],pesos_camada_dense.shape[1])
+layer_1.set_weights([pesos_camada_dense_aleatorios, vieses_camada_dense])
+
+vieses_camada_dense_zerados = np.zeros(vieses_camada_dense.shape)
+vieses_camada_dense_aleatorios = np.random.rand(vieses_camada_dense.shape[0],)
+layer_1.set_weights([pesos_camada_dense_aleatorios, vieses_camada_dense_zerados])
+
+
+hyperparametros = {'learning_rate':0.002,# learning_rate padrão = 0.001
+                   'validation_split':0.2,
+                   'epochs':5,
+                   'alterar_batch_size': False
+                   }
+
+if(hyperparametros['alterar_batch_size']):
+    tamanho_lote_treinamento = int(imagens_treino.shape[0]*(1-hyperparametros['validation_split'])/100)
+else:
+    tamanho_lote_treinamento=None
 
 def treinar_modelo():
-    modelo.compile(optimizer='adam',
+
+    adam = keras.optimizers.Adam(learning_rate=hyperparametros['learning_rate'])
+    callbacks = [keras.callbacks.EarlyStopping(monitor='val_loss'),
+                 keras.callbacks.ModelCheckpoint(filepath='melhor_modelo.hdf5',
+                                                 monitor='val_loss',
+                                                 save_best_only=True)]
+    modelo.compile(optimizer=adam,
                    loss='sparse_categorical_crossentropy',
                    metrics=['accuracy'])
 
     historico_treinamento = modelo.fit(imagens_treino,
                                        identificacoes_treino,
-                                       epochs=3,
-                                       validation_split=0.2)
+                                       batch_size=(tamanho_lote_treinamento),
+                                       epochs=hyperparametros['epochs'],
+                                       callbacks=callbacks,
+                                       validation_split=hyperparametros['validation_split'])
 
     return historico_treinamento
 
@@ -116,8 +145,8 @@ def treinar_modelo():
 # In[54]:
 
 
-historico_1 = treinar_modelo()
-historico_1.history
+#historico_1 = treinar_modelo()
+#historico_1.history
 
 
 # In[55]:
@@ -143,12 +172,8 @@ def plotar(historico, metrica):
 # In[56]:
 
 
-plotar(historico_1, 'Perda')
-
-# In[57]:
-
-
-plotar(historico_1, 'Acurácia')
+#plotar(historico_1, 'Perda')
+#plotar(historico_1, 'Acurácia')
 
 # In[58]:
 
@@ -158,7 +183,7 @@ testes = modelo.predict(imagens_teste)
 # In[59]:
 
 
-perda, acuracia = modelo.evaluate(imagens_teste, identificacoes_teste)
+#perda, acuracia = modelo.evaluate(imagens_teste, identificacoes_teste)
 
 # In[60]:
 
@@ -167,38 +192,16 @@ modelo.save('modelo.h5')
 
 # In[61]:
 
-
-modelo_salvo = load_model('modelo.h5')
+'''
+#modelo_salvo = load_model('modelo.h5')
 testes_modelo_salvo = modelo_salvo.predict(imagens_teste)
 print('Resultado teste: ', np.argmax(testes_modelo_salvo[1]))
 print('Número imagem teste: ', identificacoes_teste[1])
 
-# In[62]:
-
 
 sumario = modelo_salvo.summary()
 sumario
-
-# In[63]:
-
-
-layer_1 = modelo.layers[1]
-pesos_camada_dense = layer_1.get_weights()[0]
-
-# In[64]:
-
-
-vieses_camada_dense = layer_1.get_weights()[1]
-
-# In[65]:
-
-
-pesos_camada_dense_zerados = np.zeros(pesos_camada_dense.shape)
-pesos_camada_dense_aleatorios = np.random.rand(pesos_camada_dense.shape[0],pesos_camada_dense.shape[1])
-layer_1.set_weights([pesos_camada_dense_aleatorios, vieses_camada_dense])
-
-# In[66]:
-
+'''
 
 historico_2 = treinar_modelo()
 
