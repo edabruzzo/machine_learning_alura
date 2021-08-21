@@ -42,3 +42,5 @@ $ git clone https://github.com/matplotlib/matplotlib.git
 $ cd matplotlib
 $ python setup.py install
 
+
+GITHUB: token gravado em arquivo cat ~/github_token.txt e também exportado como variável (vide ~/.bashrc) 
