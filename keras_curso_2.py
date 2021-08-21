@@ -194,7 +194,7 @@ vieses_camada_dense = layer_1.get_weights()[1]
 
 
 pesos_camada_dense_zerados = np.zeros(pesos_camada_dense.shape)
-pesos_camada_dense_aleatorios = np.zeros(pesos_camada_dense.shape)
+pesos_camada_dense_aleatorios = np.random.rand(pesos_camada_dense.shape[0],pesos_camada_dense.shape[1])
 layer_1.set_weights([pesos_camada_dense_aleatorios, vieses_camada_dense])
 
 # In[66]:
