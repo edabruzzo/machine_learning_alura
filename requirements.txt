@@ -1,3 +1,6 @@
 tensorflow
 matplotlib
 scipy
+pandas
+seaborn
+sklearn
