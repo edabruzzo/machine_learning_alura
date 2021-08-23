@@ -4,9 +4,9 @@
 # In[1]:
 
 
-#get_ipython().system('pip install -r requirements.txt')
+get_ipython().system('pip install -r requirements.txt')
 
-# In[2]:
+# In[17]:
 
 
 import pandas as pd
@@ -16,25 +16,36 @@ import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
+import numpy as np
 
-# In[3]:
+'''
+
+cursos.alura.com.br/course/deep-learning-previsao-keras
+
+github.com/alura-cursos/deeptime
+
+
+
+'''
+
+# In[7]:
 
 
 mpl.rcParams['figure.figsize'] = (10, 6)
 mpl.rcParams['font.size'] = 22
 
-# In[4]:
+# In[8]:
 
 
 passageiros = pd.read_csv('Passageiros.csv')
 
-# In[5]:
+# In[9]:
 
 
 passageiros.head()
 
 
-# In[6]:
+# In[10]:
 
 
 def plotar_dados(dados):
@@ -43,7 +54,7 @@ def plotar_dados(dados):
 
 plotar_dados(passageiros)
 
-# In[7]:
+# In[11]:
 
 
 sc = StandardScaler()
@@ -51,14 +62,14 @@ sc.fit(passageiros)
 dado_escalado = sc.transform(passageiros)
 dado_escalado
 
-# In[8]:
+# In[12]:
 
 
 x = dado_escalado[:, 0]
 y = dado_escalado[:, 1]
 
 
-# In[9]:
+# In[13]:
 
 
 def plotar_eixos(x, y, label):
@@ -69,7 +80,7 @@ def plotar_eixos(x, y, label):
 
 plotar_eixos(x, y, 'dados_escalados')
 
-# In[10]:
+# In[14]:
 
 
 tamanho_treino = int(len(passageiros) * 0.8)
@@ -84,11 +95,10 @@ plotar_eixos(x_treino, y_treino, 'treino')
 plotar_eixos(x_teste, y_teste, 'teste')
 
 
-# In[21]:
+# In[28]:
 
 
 def definir_modelo(hyperparams=[], loss='mean_squared_error', optimizer='adam'):
-
     modelo = Sequential()
 
     for i in range(0, len(hyperparams)):
@@ -107,11 +117,10 @@ def definir_modelo(hyperparams=[], loss='mean_squared_error', optimizer='adam'):
     return modelo
 
 
-# In[23]:
+# In[29]:
 
 
 def plotar_resultados(x, y):
-
     dados = {'tempo': x, 'passageiros': y[:, 0]}
     resultados = pd.DataFrame(data=dados)
     resultados_inversos = sc.inverse_transform(resultados)
@@ -119,11 +128,10 @@ def plotar_resultados(x, y):
     plotar_eixos(x, y, 'predições')
 
 
-# In[38]:
+# In[30]:
 
 
 def testar_modelo(hyperparams, epocas_treino=5):
-
     modelo = definir_modelo(hyperparams)
     modelo.fit(x_treino, y_treino, epochs=epocas_treino)
     y_predict = modelo.predict(x_treino)
@@ -133,7 +141,7 @@ def testar_modelo(hyperparams, epocas_treino=5):
     plotar_resultados(x_teste, y_predict_teste)
 
 
-# In[39]:
+# In[14]:
 
 
 hyperparams_1 = [{
@@ -146,7 +154,7 @@ hyperparams_1 = [{
 
 testar_modelo(hyperparams_1)
 
-# In[40]:
+# In[15]:
 
 
 hyperparams_2 = [{
@@ -160,7 +168,7 @@ hyperparams_2 = [{
 
 testar_modelo(hyperparams_2)
 
-# In[42]:
+# In[16]:
 
 
 hyperparams_3 = [{
@@ -191,6 +199,133 @@ hyperparams_3 = [{
 ]
 
 testar_modelo(hyperparams_3, epocas_treino=100)
+
+# In[17]:
+
+
+hyperparams_4 = [{
+
+    'dimensao_saida': 8,
+    'activation': 'sigmoid',
+    'kernel_initializer': 'random_uniform',
+    'use_bias': True,
+
+},
+
+    {
+        'dimensao_saida': 8,
+        'activation': 'sigmoid',
+        'kernel_initializer': 'random_uniform',
+        'use_bias': True,
+
+    },
+
+    {
+        'dimensao_saida': 1,
+        'activation': 'linear',
+        'kernel_initializer': 'random_uniform',
+        'use_bias': True,
+
+    }
+
+]
+
+testar_modelo(hyperparams_4, epocas_treino=500)
+
+
+# In[20]:
+
+
+def altera_perspectiva(dados, passos_atraso):
+    X_novo, y_novo = [], []
+
+    vetor = pd.DataFrame(dados)[0]
+
+    for i in (range(passos_atraso, vetor.shape[0])):
+        X_novo.append(list(vetor.loc[i - passos_atraso:i - 1]))
+        y_novo.append(vetor.loc[i])
+
+    X_novo, y_novo = np.array(X_novo), np.array(y_novo)
+    return X_novo, y_novo
+
+
+# In[25]:
+
+
+X_treino_novo, y_treino_novo = altera_perspectiva(y_treino, 1)
+print(X_treino_novo[0:5])
+print(y_treino_novo[0:5])
+
+# In[26]:
+
+
+X_teste_novo, y_teste_novo = altera_perspectiva(y_teste, 1)
+print(X_teste_novo[0:5])
+print(y_teste_novo[0:5])
+
+# In[31]:
+
+
+hyperparams_5 = [{
+
+    'dimensao_saida': 8,
+    'activation': 'linear',
+    'kernel_initializer': 'ones',
+    'use_bias': False,
+
+},
+
+    {
+        'dimensao_saida': 64,
+        'activation': 'sigmoid',
+        'kernel_initializer': 'random_uniform',
+        'use_bias': False,
+
+    },
+
+    {
+        'dimensao_saida': 1,
+        'activation': 'linear',
+        'kernel_initializer': 'random_uniform',
+        'use_bias': False,
+
+    }
+
+]
+
+testar_modelo(hyperparams_5, epocas_treino=100)
+
+# In[36]:
+
+
+hyperparams_5 = [{
+
+    'dimensao_saida': 8,
+    'activation': 'linear',
+    'kernel_initializer': 'ones',
+    'use_bias': True,
+
+},
+
+    {
+        'dimensao_saida': 64,
+        'activation': 'sigmoid',
+        'kernel_initializer': 'random_uniform',
+        'use_bias': True,
+
+    },
+
+    {
+        'dimensao_saida': 1,
+        'activation': 'linear',
+        'kernel_initializer': 'random_uniform',
+        'use_bias': True,
+
+    }
+
+]
+
+testar_modelo(hyperparams_5, epocas_treino=500)
 
 # In[ ]:
 
