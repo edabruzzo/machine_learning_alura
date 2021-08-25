@@ -45,16 +45,11 @@ def plotar_dados_completos():
 # In[4]:
 
 
-def escalar_dados():
-    sc = StandardScaler()
-    sc.fit(passageiros)
-    dado_escalado = sc.transform(passageiros)
-    x = dado_escalado[:, 0]  # Features - Características - Tempo
-    y = dado_escalado[:, 1]  # Alvo - Número de passageiros
-    return x, y
-
-
-x_escalado, y_escalado = escalar_dados()
+sc = StandardScaler()
+sc.fit(passageiros)
+dado_escalado = sc.transform(passageiros)
+x_escalado = dado_escalado[:, 0]  # Features - Características - Tempo
+y_escalado = dado_escalado[:, 1]  # Alvo - Número de passageiros
 
 
 # In[5]:
@@ -87,7 +82,7 @@ def dividir_treino_teste(tamanho_percentual_treino):
 x_treino, y_treino, x_teste, y_teste = dividir_treino_teste(0.8)
 
 
-# In[9]:
+# In[7]:
 
 
 def plotar_eixos(x, y, label):
@@ -102,7 +97,7 @@ plotar_eixos(x_teste, y_teste, 'teste')
 #
 # ## Regressão Linear
 
-# In[37]:
+# In[8]:
 
 
 def definir_modelo(hyperparams=[], input_dim=1, loss='mean_squared_error', optimizer='adam'):
@@ -127,7 +122,7 @@ def definir_modelo(hyperparams=[], input_dim=1, loss='mean_squared_error', optim
     return modelo
 
 
-# In[38]:
+# In[9]:
 
 
 def plotar_resultados(x, y):
@@ -138,7 +133,7 @@ def plotar_resultados(x, y):
     plotar_eixos(x, y, 'predições')
 
 
-# In[39]:
+# In[10]:
 
 
 def testar_modelo(hyperparams, epocas_treino=5):
@@ -154,7 +149,7 @@ def testar_modelo(hyperparams, epocas_treino=5):
     plotar_resultados(x_teste, y_predict_teste)
 
 
-# In[40]:
+# In[11]:
 
 
 hyperparams_1 = [{
@@ -162,15 +157,15 @@ hyperparams_1 = [{
     'dimensao_saida': 1,
     'activation': 'linear',
     'kernel_initializer': 'Ones',
-    'use_bias': True
+    'use_bias': True,
+    'input_dim': 1
 }]
 
-# testar_modelo(hyperparams=hyperparams_1)
-
+testar_modelo(hyperparams=hyperparams_1)
 
 # ## Regressão não-linear
 
-# In[41]:
+# In[12]:
 
 
 hyperparams_4 = [{
@@ -178,7 +173,8 @@ hyperparams_4 = [{
     'dimensao_saida': 8,
     'activation': 'sigmoid',
     'kernel_initializer': 'random_uniform',
-    'use_bias': False
+    'use_bias': False,
+    'input_dim': 1
 
 },
 
@@ -200,8 +196,7 @@ hyperparams_4 = [{
 
 ]
 
-
-# testar_modelo(hyperparams_4, epocas_treino=500)
+testar_modelo(hyperparams_4, epocas_treino=500)
 
 
 # # Aula 3
@@ -210,7 +205,7 @@ hyperparams_4 = [{
 #
 # Agora x e y vão valores diferentes. X vai conter o número de passageiros em um tempo anterior e y vai conter o número de passageiros em t+1, por exemplo.
 
-# In[42]:
+# In[13]:
 
 
 def separa_dados(dados_seriados, n_passos):
@@ -229,7 +224,7 @@ def separa_dados(dados_seriados, n_passos):
     return X_novo, y_novo
 
 
-# In[44]:
+# In[14]:
 
 
 n_passos = 1
@@ -240,7 +235,7 @@ xteste_novo, yteste_novo = separa_dados(y_teste, n_passos)
 
 # ## Voltando para as redes neurais
 
-# In[45]:
+# In[15]:
 
 
 hyperparams_5 = [{
@@ -273,35 +268,35 @@ hyperparams_5 = [{
 
 regressor3 = definir_modelo(hyperparams_5)
 
-# In[46]:
+# In[16]:
 
 
 regressor3.fit(xtreino_novo, ytreino_novo, epochs=100)
 
-# In[47]:
+# In[17]:
 
 
 y_predict_novo = regressor3.predict(xtreino_novo)
 
 
-# In[48]:
+# In[18]:
 
 
 def plotar_resultado_treino_dados_alterados(y, dados, label):
     sns.lineplot(x='tempo', y=y, data=dados, label=label)
 
 
-# In[49]:
+# In[19]:
 
 
 y_predict_teste_novo = regressor3.predict(xteste_novo)
 
-# In[50]:
+# In[20]:
 
 
 resultado = pd.DataFrame(y_predict_teste_novo)[0]
 
-# In[51]:
+# In[21]:
 
 
 plotar_resultado_treino_dados_alterados(ytreino_novo, passageiros[1:115], 'treino')
@@ -311,14 +306,14 @@ plotar_resultado_treino_dados_alterados(resultado.values, passageiros[116:144], 
 
 # ## Janelas
 
-# In[52]:
+# In[22]:
 
 
 n_passos = 4
 xtreino_novo, ytreino_novo = separa_dados(y_treino, n_passos)
 xteste_novo, yteste_novo = separa_dados(y_teste, n_passos)
 
-# In[54]:
+# In[23]:
 
 
 hyperparams_6 = [{
@@ -351,22 +346,22 @@ hyperparams_6 = [{
 
 regressor4 = definir_modelo(hyperparams_6)
 
-# In[55]:
+# In[24]:
 
 
 regressor4.fit(xtreino_novo, ytreino_novo, epochs=300)
 
-# In[56]:
+# In[25]:
 
 
 y_predict_teste_novo = regressor4.predict(xteste_novo)
 
-# In[57]:
+# In[26]:
 
 
 resultado = pd.DataFrame(y_predict_teste_novo)[0]
 
-# In[58]:
+# In[27]:
 
 
 plotar_resultado_treino_dados_alterados(ytreino_novo, passageiros[4:115], 'treino')
