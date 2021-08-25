@@ -102,7 +102,7 @@ plotar_eixos(x_teste, y_teste, 'teste')
 #
 # ## Regressão Linear
 
-# In[10]:
+# In[37]:
 
 
 def definir_modelo(hyperparams=[], input_dim=1, loss='mean_squared_error', optimizer='adam'):
@@ -112,7 +112,6 @@ def definir_modelo(hyperparams=[], input_dim=1, loss='mean_squared_error', optim
         input_dim = hyperparams[0]['input_dim']
 
     for i in range(0, len(hyperparams)):
-
         modelo.add(Dense(hyperparams[i]['dimensao_saida'],
                          input_dim=input_dim,
                          activation=hyperparams[i]['activation'],
@@ -128,7 +127,7 @@ def definir_modelo(hyperparams=[], input_dim=1, loss='mean_squared_error', optim
     return modelo
 
 
-# In[11]:
+# In[38]:
 
 
 def plotar_resultados(x, y):
@@ -139,7 +138,7 @@ def plotar_resultados(x, y):
     plotar_eixos(x, y, 'predições')
 
 
-# In[12]:
+# In[39]:
 
 
 def testar_modelo(hyperparams, epocas_treino=5):
@@ -155,7 +154,7 @@ def testar_modelo(hyperparams, epocas_treino=5):
     plotar_resultados(x_teste, y_predict_teste)
 
 
-# In[13]:
+# In[40]:
 
 
 hyperparams_1 = [{
@@ -163,7 +162,7 @@ hyperparams_1 = [{
     'dimensao_saida': 1,
     'activation': 'linear',
     'kernel_initializer': 'Ones',
-    'use_bias': True,
+    'use_bias': True
 }]
 
 # testar_modelo(hyperparams=hyperparams_1)
@@ -171,7 +170,7 @@ hyperparams_1 = [{
 
 # ## Regressão não-linear
 
-# In[14]:
+# In[41]:
 
 
 hyperparams_4 = [{
@@ -180,6 +179,7 @@ hyperparams_4 = [{
     'activation': 'sigmoid',
     'kernel_initializer': 'random_uniform',
     'use_bias': False
+
 },
 
     {
@@ -210,7 +210,7 @@ hyperparams_4 = [{
 #
 # Agora x e y vão valores diferentes. X vai conter o número de passageiros em um tempo anterior e y vai conter o número de passageiros em t+1, por exemplo.
 
-# In[15]:
+# In[42]:
 
 
 def separa_dados(dados_seriados, n_passos):
@@ -229,7 +229,8 @@ def separa_dados(dados_seriados, n_passos):
     return X_novo, y_novo
 
 
-# In[16]:
+# In[44]:
+
 
 n_passos = 1
 xtreino_novo, ytreino_novo = separa_dados(y_treino, n_passos)
@@ -239,7 +240,7 @@ xteste_novo, yteste_novo = separa_dados(y_teste, n_passos)
 
 # ## Voltando para as redes neurais
 
-# In[17]:
+# In[45]:
 
 
 hyperparams_5 = [{
@@ -272,35 +273,35 @@ hyperparams_5 = [{
 
 regressor3 = definir_modelo(hyperparams_5)
 
-# In[18]:
+# In[46]:
 
 
 regressor3.fit(xtreino_novo, ytreino_novo, epochs=100)
 
-# In[19]:
+# In[47]:
 
 
 y_predict_novo = regressor3.predict(xtreino_novo)
 
 
-# In[21]:
+# In[48]:
 
 
 def plotar_resultado_treino_dados_alterados(y, dados, label):
     sns.lineplot(x='tempo', y=y, data=dados, label=label)
 
 
-# In[23]:
+# In[49]:
 
 
 y_predict_teste_novo = regressor3.predict(xteste_novo)
 
-# In[25]:
+# In[50]:
 
 
 resultado = pd.DataFrame(y_predict_teste_novo)[0]
 
-# In[26]:
+# In[51]:
 
 
 plotar_resultado_treino_dados_alterados(ytreino_novo, passageiros[1:115], 'treino')
@@ -310,13 +311,14 @@ plotar_resultado_treino_dados_alterados(resultado.values, passageiros[116:144], 
 
 # ## Janelas
 
-# In[28]:
+# In[52]:
 
-n_passos=4
+
+n_passos = 4
 xtreino_novo, ytreino_novo = separa_dados(y_treino, n_passos)
 xteste_novo, yteste_novo = separa_dados(y_teste, n_passos)
 
-# In[30]:
+# In[54]:
 
 
 hyperparams_6 = [{
@@ -349,27 +351,25 @@ hyperparams_6 = [{
 
 regressor4 = definir_modelo(hyperparams_6)
 
-# In[32]:
+# In[55]:
 
 
 regressor4.fit(xtreino_novo, ytreino_novo, epochs=300)
 
-# In[33]:
+# In[56]:
 
 
 y_predict_teste_novo = regressor4.predict(xteste_novo)
 
-# In[34]:
+# In[57]:
 
 
 resultado = pd.DataFrame(y_predict_teste_novo)[0]
 
-# In[36]:
+# In[58]:
 
 
 plotar_resultado_treino_dados_alterados(ytreino_novo, passageiros[4:115], 'treino')
 plotar_resultado_treino_dados_alterados(pd.DataFrame(y_predict_novo)[0], passageiros[4:115], 'ajuste_treino')
 plotar_resultado_treino_dados_alterados(yteste_novo, passageiros[119:144], 'teste')
 plotar_resultado_treino_dados_alterados(resultado.values, passageiros[119:144], 'previsão')
-
-# In[ ]:
