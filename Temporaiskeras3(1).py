@@ -296,13 +296,22 @@ y_predict_teste_novo = regressor3.predict(xteste_novo)
 
 resultado = pd.DataFrame(y_predict_teste_novo)[0]
 
-# In[21]:
+
+# In[32]:
 
 
-plotar_resultado_treino_dados_alterados(ytreino_novo, passageiros[1:115], 'treino')
-plotar_resultado_treino_dados_alterados(pd.DataFrame(y_predict_novo)[0], passageiros[1:115], 'ajuste_treino')
-plotar_resultado_treino_dados_alterados(yteste_novo, passageiros[116:144], 'teste')
-plotar_resultado_treino_dados_alterados(resultado.values, passageiros[116:144], 'previsão')
+def plotar_resultados_2():
+    inicio = passageiros.shape[0] - yteste_novo.shape[0]
+    fim = passageiros.shape[0]
+    fim_2 = ytreino_novo.shape[0] + n_passos
+    plotar_resultado_treino_dados_alterados(ytreino_novo, passageiros[n_passos:fim_2], 'treino')
+    plotar_resultado_treino_dados_alterados(pd.DataFrame(y_predict_novo)[0], passageiros[n_passos:fim_2],
+                                            'ajuste_treino')
+    plotar_resultado_treino_dados_alterados(yteste_novo, passageiros[inicio:fim], 'teste')
+    plotar_resultado_treino_dados_alterados(resultado.values, passageiros[inicio:fim], 'previsão')
+
+
+plotar_resultados_2()
 
 # ## Janelas
 
@@ -361,10 +370,12 @@ y_predict_teste_novo = regressor4.predict(xteste_novo)
 
 resultado = pd.DataFrame(y_predict_teste_novo)[0]
 
-# In[27]:
+# In[31]:
 
 
-plotar_resultado_treino_dados_alterados(ytreino_novo, passageiros[4:115], 'treino')
-plotar_resultado_treino_dados_alterados(pd.DataFrame(y_predict_novo)[0], passageiros[4:115], 'ajuste_treino')
-plotar_resultado_treino_dados_alterados(yteste_novo, passageiros[119:144], 'teste')
-plotar_resultado_treino_dados_alterados(resultado.values, passageiros[119:144], 'previsão')
+plotar_resultados_2()
+
+# In[ ]:
+
+
+
