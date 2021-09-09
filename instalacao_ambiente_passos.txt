@@ -44,3 +44,10 @@ $ python setup.py install
 
 
 GITHUB: token gravado em arquivo cat ~/github_token.txt e também exportado como variável (vide ~/.bashrc) 
+
+
+Para evitar o seguinte erro:
+UserWarning: Could not import the lzma module. Your installed Python is incomplete. Attempting to use lzma compression will result in a RuntimeError.
+  warnings.warn(msg)
+
+sudo apt-get install liblzma-dev

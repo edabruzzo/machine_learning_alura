@@ -36,13 +36,14 @@ dados.shape
 
 import matplotlib.pyplot as plt
 
-
 # In[6]:
 
 
+
 def plotar_dados(x, y, label_eixoX, indices=None):
-    if indices is not None:
-        plt.xticks(indices, fontsize=14)
+
+    if indice is not None:
+        plt.xticks(indice, fontsize=14)
 
     plt.rcParams.update({'font.size': 14})
     plt.scatter(x, y)
@@ -50,12 +51,14 @@ def plotar_dados(x, y, label_eixoX, indices=None):
     plt.ylabel('bicicletas_alugadas')
 
 
+
 plotar_dados(dados['temperatura'], dados['bicicletas_alugadas'], label_eixoX='temperatura')
+plotar_dados(dados['clima'], dados['bicicletas_alugadas'], label_eixoX='clima', indices=[1,2,3])
 
-# In[7]:
 
+plt.rcParams.update({'font.size': 22})
+indice = [1, 2, 3]
 
-plotar_dados(dados['clima'], dados['bicicletas_alugadas'], label_eixoX='clima', indices=[1, 2, 3])
 
 # ### Normalizando a base de dados
 
@@ -88,34 +91,29 @@ ymax = np.amax(y)
 y = y / ymax
 print(y[0:10])
 
+
 # ### Funções de ativação
 
 # In[13]:
 
 
-sigmoid = lambda valor: 1 / (1 + np.exp(-valor))
+def sigmoid(Soma):
+    return 1 / (1 + np.exp(-Soma))
 
-relu = lambda valor: np.maximum(0, valor)
+
+def relu(Soma):
+    return np.maximum(0, Soma)
+
 
 # ### Criando a estrutura da rede
 
 # In[14]:
 
 
-arquiteturas = []
-
-arquitetura_1 = [
+arquitetura = [
     {"dim_entrada": 2, "dim_saida": 50, "ativacao": "relu"},
-    {"dim_entrada": 50, "dim_saida": 1, "ativacao": "sigmoid"}
+    {"dim_entrada": 50, "dim_saida": 1, "ativacao": "sigmoid"},
 ]
-
-arquitetura_2 = [
-    {"dim_entrada": 2, "dim_saida": 4, "ativacao": "sigmoid"},
-    {"dim_entrada": 4, "dim_saida": 1, "ativacao": "sigmoid"}
-]
-
-arquiteturas.append(arquitetura_1)
-arquiteturas.append(arquitetura_2)
 
 
 # ### Pesos e viés
@@ -154,9 +152,9 @@ def inicia_camadas(arquitetura, seed=99):
 # In[16]:
 
 
-def propaga_uma_camada(Ativado_anterior, Pesos_atual, bias_atual, ativacao="relu"):
+def propaga_uma_camada(Ativado_anterior, Pesos_atual, b_atual, ativacao="relu"):
     # cálculo da entrada para a função de ativação
-    Saida_atual = np.dot(Pesos_atual, Ativado_anterior) + bias_atual
+    Saida_atual = np.dot(Pesos_atual, Ativado_anterior) + b_atual
 
     # selecção da função de ativação
     if ativacao is "relu":
@@ -208,18 +206,23 @@ def propaga_total(X, valores_parametros, arquitetura):
 # In[18]:
 
 
-# y_estimado[0,0]*ymax
-
+valores_parametros = inicia_camadas(arquitetura, seed=99)
+y_estimado, memoria = propaga_total(np.transpose(X), valores_parametros, arquitetura)
 
 # In[19]:
 
 
-# y[0]*ymax
+y_estimado[0, 0] * ymax
+
+# In[20]:
+
+
+y[0] * ymax
 
 
 # ### Atualização dos pesos
 
-# In[20]:
+# In[21]:
 
 
 def atualiza(valores_parametros, gradidentes, arquitetura, taxa_aprendizagem):
@@ -233,7 +236,7 @@ def atualiza(valores_parametros, gradidentes, arquitetura, taxa_aprendizagem):
 
 # ### Função de custo
 
-# In[21]:
+# In[22]:
 
 
 def valor_de_custo(Y_predito, Y):
@@ -241,13 +244,12 @@ def valor_de_custo(Y_predito, Y):
     m = Y_predito.shape[1]
 
     custo = -1 / m * (np.dot(Y, np.log(Y_predito).T) + np.dot(1 - Y, np.log(1 - Y_predito).T))
-
     return np.squeeze(custo)
 
 
 # ### Retropropagação
 
-# In[22]:
+# In[23]:
 
 
 def retropropagacao_total(Y_predito, Y, memoria, valores_parametros, arquitetura):
@@ -273,15 +275,10 @@ def retropropagacao_total(Y_predito, Y, memoria, valores_parametros, arquitetura
         Saida_atual = memoria["Z" + str(indice_camada_atual)]
 
         Pesos_atual = valores_parametros["P" + str(indice_camada_atual)]
-        bias_atual = valores_parametros["b" + str(indice_camada_atual)]
+        b_atual = valores_parametros["b" + str(indice_camada_atual)]
 
         dAtivado_anterior, dPesos_atual, db_atual = retropropagacao_uma_camada(
-            dAtivado_atual,
-            Pesos_atual,
-            bias_atual,
-            Saida_atual,
-            Ativado_anterior,
-            funcao_ativao_atual)
+            dAtivado_atual, Pesos_atual, b_atual, Saida_atual, Ativado_anterior, funcao_ativao_atual)
 
         gradientes["dP" + str(indice_camada_atual)] = dPesos_atual
         gradientes["db" + str(indice_camada_atual)] = db_atual
@@ -289,17 +286,12 @@ def retropropagacao_total(Y_predito, Y, memoria, valores_parametros, arquitetura
     return gradientes
 
 
-# In[23]:
+# In[24]:
 
 
-'''
 def sigmoid_retro(dAtivado, Saida):
     sig = sigmoid(Saida)
     return dAtivado * sig * (1 - sig)
-
-'''
-
-sigmoid_retro = lambda dAtivado, Saida: dAtivado * sigmoid(Saida) * (1 - sigmoid(Saida))
 
 
 def relu_retro(dAtivado, Saida):
@@ -308,7 +300,7 @@ def relu_retro(dAtivado, Saida):
     return dSaida;
 
 
-# In[24]:
+# In[25]:
 
 
 def retropropagacao_uma_camada(dAtivado_atual, Pesos_atual, b_atual, Saida_atual, Ativado_anterior, ativacao="relu"):
@@ -338,7 +330,7 @@ def retropropagacao_uma_camada(dAtivado_atual, Pesos_atual, b_atual, Saida_atual
 
 # ### Treinamento
 
-# In[25]:
+# In[26]:
 
 
 def treino(X, Y, X_teste, Y_teste, arquitetura, epocas, taxa_aprendizagem):
@@ -375,113 +367,71 @@ def treino(X, Y, X_teste, Y_teste, arquitetura, epocas, taxa_aprendizagem):
     return valores_parametros, historia_custo, historia_custo_teste
 
 
-# In[26]:
+# In[27]:
 
 
 from sklearn.model_selection import train_test_split
 
-# In[27]:
+# In[28]:
 
 
 X_treino, X_teste, y_treino, y_teste = train_test_split(X, y, test_size=0.43, random_state=42)
 
-
-# In[28]:
-
-
-def testar_arquiteturas(epocas=1000, taxa_aprendizagem=0.01):
-    treinamentos = []
-
-    for arquitetura in arquiteturas:
-        # Treinamento
-        valores_parametros, historia_custo, historia_custo_teste = treino(np.transpose(X_treino),
-                                                                          np.transpose(
-                                                                              y_treino.reshape((y_treino.shape[0], 1))),
-                                                                          np.transpose(X_teste),
-                                                                          np.transpose(
-                                                                              y_teste.reshape((y_teste.shape[0], 1))),
-                                                                          arquitetura,
-                                                                          epocas,
-                                                                          taxa_aprendizagem)
-
-        treinamento = {}
-        treinamento['parametros'] = valores_parametros
-        treinamento['historia_custo'] = historia_custo
-        treinamento['historia_custo_teste'] = historia_custo_teste
-
-        treinamentos.append(treinamento)
-
-    return treinamentos
-
-
 # In[29]:
 
 
-def plotar_funcao_custo(historia_custo, historia_custo_teste):
-    plt.plot(historia_custo)
-    plt.plot(historia_custo_teste, 'r')
-    plt.legend(['Treinamento', 'Teste'])
-    plt.ylabel('Custo')
-    plt.xlabel('Épocas')
-    plt.show()
-
-
-treinamentos = testar_arquiteturas(epocas=20000, taxa_aprendizagem=0.05)
+# Treinamento
+valores_parametros, historia_custo, historia_custo_teste = treino(np.transpose(X_treino), np.transpose(
+    y_treino.reshape((y_treino.shape[0], 1))),
+                                                                  np.transpose(X_teste),
+                                                                  np.transpose(y_teste.reshape((y_teste.shape[0], 1))),
+                                                                  arquitetura, 20000, 0.01)
 
 # In[30]:
 
 
-plotar_funcao_custo(treinamentos[0]['historia_custo'], treinamentos[0]['historia_custo_teste'])
+plt.plot(historia_custo)
+plt.plot(historia_custo_teste, 'r')
+plt.legend(['Treinamento', 'Teste'])
+plt.ylabel('Custo')
+plt.xlabel('Épocas')
+plt.show()
+
+# ### Fazendo Previsões
 
 # In[31]:
 
 
-plotar_funcao_custo(treinamentos[1]['historia_custo'], treinamentos[1]['historia_custo_teste'])
-
-# ### Fazendo Previsões
+# Previsão
+Y_pred, _ = propaga_total(np.transpose(X_teste), valores_parametros, arquitetura)
 
 # In[32]:
 
 
-# Previsão arquitetura 1
-Y_pred_1, _1 = propaga_total(np.transpose(X_teste), treinamentos[0]['parametros'], arquiteturas[0])
-# Previsão arquitetura 2
-Y_pred_2, _2 = propaga_total(np.transpose(X_teste), treinamentos[1]['parametros'], arquiteturas[1])
+plt.plot(np.transpose(X_teste)[1], ymax * y_teste, '.')
+plt.plot(np.transpose(X_teste)[1], ymax * Y_pred.reshape([-1, 1]), '.r')
+plt.legend(['Reais', 'Preditos'])
+plt.ylabel('bicicletas_alugadas')
+plt.xlabel('temperatura')
+plt.show()
+
+# In[33]:
 
 
-# In[34]:
+plt.plot(3 * np.transpose(X_teste)[0], ymax * y_teste, '.')
+plt.plot(3 * np.transpose(X_teste)[0], ymax * Y_pred.reshape([-1, 1]), '.r')
+plt.legend(['Reais', 'Preditos'])
+plt.ylabel('bicicletas_alugadas')
+plt.xlabel('clima')
+plt.rcParams.update({'font.size': 22})
+indice = [1, 2, 3]
+plt.xticks(indice, fontsize=14)
+plt.show()
+
+# In[ ]:
 
 
-def plotar_previsoes_by_temperatura(Y_predito, criterio_X):
-    if criterio_X == 'temperatura':
-        indice_X = 1
-    if criterio_X == 'clima':
-        indice_X = 0
-        plt.rcParams.update({'font.size': 22})
-        indice = [1, 2, 3]
-        plt.xticks(indice, fontsize=14)
-
-    plt.plot(np.transpose(X_teste)[indice_X], ymax * y_teste, '.')
-    plt.plot(np.transpose(X_teste)[indice_X], ymax * Y_predito.reshape([-1, 1]), '.r')
-    plt.legend(['Reais', 'Preditos'])
-    plt.ylabel('bicicletas_alugadas')
-    plt.xlabel(criterio_X)
-    plt.show()
+# In[ ]:
 
 
-plotar_previsoes_by_temperatura(Y_pred_1, 'temperatura')
 
-# In[35]:
-
-
-plotar_previsoes_by_temperatura(Y_pred_1, 'clima')
-
-# In[37]:
-
-
-plotar_previsoes_by_temperatura(Y_pred_2, 'temperatura')
-
-# In[38]:
-
-
-plotar_previsoes_by_temperatura(Y_pred_2, 'clima')
