@@ -11,6 +11,14 @@ from sklearn.linear_model import LogisticRegression
 # Referência: https://pandas.pydata.org/pandas-docs/stable/user_guide/sparse.html
 from scipy import sparse
 import time
+# Display the generated image:
+# the matplotlib way:
+import matplotlib.pyplot as plt
+
+#get_ipython().run_line_magic('matplotlib', 'inline')
+import os
+from os import path
+from wordcloud import WordCloud
 
 # In[2]:
 
@@ -44,11 +52,10 @@ print(resenhas_imdb['sentiment'].value_counts())
 print(resenhas_imdb['classificacao'].value_counts())
 
 
-# In[17]:
+# In[6]:
 
 
 def treinar_classificador():
-
     vetorizador = CountVectorizer(lowercase=False, max_features=400)
     bag_of_words = vetorizador.fit_transform(resenhas_imdb['text_pt'])
 
@@ -73,48 +80,42 @@ def treinar_classificador():
 # https://www.ic.unicamp.br/~mc102/mc102-1s2019/labs/format.html
 print('Acurácia %.2f%%' % (treinar_classificador() * 100))
 
-# In[7]:
+# In[16]:
+
+def plotar_nuvem_palavras(sentimento=None):
+
+    if sentimento is None:
+        textos_filtrados = resenhas_imdb
+    else:
+        textos_filtrados = resenhas_imdb.query("sentiment == '%s'" % sentimento)
+
+    '''
+    WORDCLOUD
+    https://amueller.github.io/word_cloud/auto_examples/simple.html
+    '''
+    # get data directory (using getcwd() is needed to support running example in generated IPython notebook)
+    # d = path.dirname(__file__) if "__file__" in locals() else os.getcwd()
+
+    # Read the whole text.
+    # text = open(path.join(d, 'constitution.txt')).read()
+    text = ''.join([texto for texto in textos_filtrados['text_pt']])
+    # Generate a word cloud image
+    wordcloud = WordCloud(  # width=400,
+        # height=500,
+        max_font_size=40,
+        collocations=False).generate(text)
+    plt.figure()
+    plt.imshow(wordcloud, interpolation="bilinear")
+    plt.axis("off")
+    plt.show()
+
+    # The pil way (if you don't have matplotlib)
+    # image = wordcloud.to_image()
+    # image.show()
 
 
-'''
-WORDCLOUD
-https://amueller.github.io/word_cloud/auto_examples/simple.html
-'''
-import os
-
-from os import path
-from wordcloud import WordCloud
-
-# get data directory (using getcwd() is needed to support running example in generated IPython notebook)
-d = path.dirname(__file__) if "__file__" in locals() else os.getcwd()
-
-# Read the whole text.
-#text = open(path.join(d, 'constitution.txt')).read()
-text = ''.join([texto for texto in resenhas_imdb['text_pt']])
-# Generate a word cloud image
-wordcloud = WordCloud().generate(text)
-
-# Display the generated image:
-# the matplotlib way:
-import matplotlib.pyplot as plt
-#jupyter notebook
-#%matplotlib inline
-plt.imshow(wordcloud, interpolation='bilinear')
-plt.axis("off")
-
-# lower max_font_size
-wordcloud = WordCloud(max_font_size=40).generate(text)
-plt.figure()
-plt.imshow(wordcloud, interpolation="bilinear")
-plt.axis("off")
-plt.show()
-
-# The pil way (if you don't have matplotlib)
-# image = wordcloud.to_image()
-# image.show()
-
-
-
+plotar_nuvem_palavras('neg')
+plotar_nuvem_palavras('pos')
 
 tempo_execucao = time.time() - start_time
 print('-----Tempo de execução: %s segundos' % tempo_execucao)
