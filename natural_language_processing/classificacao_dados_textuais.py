@@ -48,6 +48,7 @@ print(resenhas_imdb['classificacao'].value_counts())
 
 
 def treinar_classificador():
+
     vetorizador = CountVectorizer(lowercase=False, max_features=400)
     bag_of_words = vetorizador.fit_transform(resenhas_imdb['text_pt'])
 
@@ -69,12 +70,50 @@ def treinar_classificador():
     return acuracia
 
 
-acuracia = treinar_classificador()
-
 # https://www.ic.unicamp.br/~mc102/mc102-1s2019/labs/format.html
-print('Acurácia %.2f%%' % (acuracia * 100))
+print('Acurácia %.2f%%' % (treinar_classificador() * 100))
 
 # In[7]:
+
+
+'''
+WORDCLOUD
+https://amueller.github.io/word_cloud/auto_examples/simple.html
+'''
+import os
+
+from os import path
+from wordcloud import WordCloud
+
+# get data directory (using getcwd() is needed to support running example in generated IPython notebook)
+d = path.dirname(__file__) if "__file__" in locals() else os.getcwd()
+
+# Read the whole text.
+#text = open(path.join(d, 'constitution.txt')).read()
+text = ''.join([texto for texto in resenhas_imdb['text_pt']])
+# Generate a word cloud image
+wordcloud = WordCloud().generate(text)
+
+# Display the generated image:
+# the matplotlib way:
+import matplotlib.pyplot as plt
+#jupyter notebook
+#%matplotlib inline
+plt.imshow(wordcloud, interpolation='bilinear')
+plt.axis("off")
+
+# lower max_font_size
+wordcloud = WordCloud(max_font_size=40).generate(text)
+plt.figure()
+plt.imshow(wordcloud, interpolation="bilinear")
+plt.axis("off")
+plt.show()
+
+# The pil way (if you don't have matplotlib)
+# image = wordcloud.to_image()
+# image.show()
+
+
 
 
 tempo_execucao = time.time() - start_time
