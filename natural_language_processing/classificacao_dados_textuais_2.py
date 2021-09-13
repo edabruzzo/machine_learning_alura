@@ -5,7 +5,6 @@
 
 
 import pandas as pd
-from pandas import Series
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.linear_model import LogisticRegression
@@ -22,7 +21,7 @@ import nltk
 from nltk import tokenize
 from nltk.corpus import stopwords
 
-#nltk.download('all')
+nltk.download('all')
 
 # In[2]:
 
@@ -46,12 +45,19 @@ resenhas_imdb.head()
 resenhas_imdb['classificacao'] = resenhas_imdb['sentiment'].replace(['neg', 'pos'], [0, 1])
 
 
-# In[21]:
+# In[4]:
 
 
-def treinar_classificador(com_tratamento=True, utiliza_stemmer=False, utilizar_TFIDF=True, utilizar_ngramas=True):
-
+def treinar_classificador(com_tratamento=True,
+                          utiliza_stemmer=False,
+                          utilizar_TFIDF=True,
+                          utilizar_ngramas=True,
+                          maximo_palavras=50):
     tamanho_texto_integral = len(resenhas_imdb['text_pt'])
+
+    # https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression
+    # https://stackoverflow.com/questions/62658215/convergencewarning-lbfgs-failed-to-converge-status-1-stop-total-no-of-iter
+    regressao_logistica = LogisticRegression(solver='lbfgs', max_iter=200)
 
     if com_tratamento:
 
@@ -73,15 +79,13 @@ def treinar_classificador(com_tratamento=True, utiliza_stemmer=False, utilizar_T
 
         from sklearn.feature_extraction.text import TfidfVectorizer
         if utilizar_ngramas:
-            tf_idf = TfidfVectorizer(lowercase=False, max_features=500, ngram_range=(1,2))
+            tf_idf = TfidfVectorizer(lowercase=False, max_features=maximo_palavras, ngram_range=(1, 2))
         else:
-            tf_idf = TfidfVectorizer(lowercase=False, max_features=500)
+            tf_idf = TfidfVectorizer(lowercase=False, max_features=maximo_palavras)
 
 
     else:
-        vetorizador = CountVectorizer(lowercase=False, max_features=500)
-
-
+        vetorizador = CountVectorizer(lowercase=False, max_features=maximo_palavras)
 
     # Retirada de acentos
     import unidecode
@@ -91,7 +95,7 @@ def treinar_classificador(com_tratamento=True, utiliza_stemmer=False, utilizar_T
     if ((com_tratamento and not jah_houve_tratamento_previo) or com_tratamento == False):
 
         if not jah_houve_tratamento_previo:
-           print('Necessário inicializar o tratamento no primeiro teste')
+            print('Necessário inicializar o tratamento no primeiro teste')
 
         for opiniao in resenhas_imdb.text_pt:
 
@@ -101,7 +105,7 @@ def treinar_classificador(com_tratamento=True, utiliza_stemmer=False, utilizar_T
 
                 if utiliza_stemmer:
                     nova_frase = [stemmer.stem(unidecode.unidecode(palavra).lower()) for palavra in palavras_texto if
-                              palavra not in palavras_irrelevantes]
+                                  palavra not in palavras_irrelevantes]
                 else:
                     nova_frase = [unidecode.unidecode(palavra).lower() for palavra in palavras_texto if
                                   palavra not in palavras_irrelevantes]
@@ -132,39 +136,88 @@ def treinar_classificador(com_tratamento=True, utiliza_stemmer=False, utilizar_T
                                                                   resenhas_imdb.classificacao,
                                                                   random_state=42)
 
-    # https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression
-    # https://stackoverflow.com/questions/62658215/convergencewarning-lbfgs-failed-to-converge-status-1-stop-total-no-of-iter
-    regressao_logistica = LogisticRegression(solver='lbfgs', max_iter=200)
     regressao_logistica.fit(treino, classe_treino)
     acuracia = regressao_logistica.score(teste, classe_teste)
+
+    if utilizar_TFIDF:
+        pesos = pd.DataFrame(regressao_logistica.coef_[0].T,
+                             index=tf_idf.get_feature_names())
+    else:
+        pesos = pd.DataFrame(regressao_logistica.coef_[0].T,
+                             index=vetorizador.get_feature_names())
+
+    print(pesos.nlargest(10, 0))
+    print(pesos.nsmallest(10, 0))
 
     return acuracia
 
 
-def testar_configuracoes_treinamento():
+# ## Testando acurácia em diferentes configurações
+
+# In[5]:
 
 
+def testar_configuracoes_treinamento(max_palavras=50):
     # https://www.ic.unicamp.br/~mc102/mc102-1s2019/labs/format.html
     print('Acurácia sem tratamento do texto e sem tf-idf: %.2f%%'
-          % (treinar_classificador(com_tratamento=False,utilizar_TFIDF=False) * 100))
+          % (treinar_classificador(com_tratamento=False,
+                                   utilizar_TFIDF=False,
+                                   maximo_palavras=max_palavras
+                                   ) * 100))
 
     # https://www.ic.unicamp.br/~mc102/mc102-1s2019/labs/format.html
     print('Acurácia sem tratamento do texto e com tf_idf: %.2f%%'
-          % (treinar_classificador(com_tratamento=False, utilizar_TFIDF=True) * 100))
-
+          % (treinar_classificador(com_tratamento=False,
+                                   utilizar_TFIDF=True,
+                                   maximo_palavras=max_palavras
+                                   ) * 100))
     # https://www.ic.unicamp.br/~mc102/mc102-1s2019/labs/format.html
     print('Acurácia com tratamento do texto e utilizaçao de TF-IDF SEM NGRAM(1,2): %.2f%%'
           % (treinar_classificador(com_tratamento=True,
                                    utiliza_stemmer=False,
                                    utilizar_TFIDF=True,
-                                   utilizar_ngramas=False) * 100))
+                                   utilizar_ngramas=False,
+                                   maximo_palavras=max_palavras
+                                   ) * 100))
 
     # https://www.ic.unicamp.br/~mc102/mc102-1s2019/labs/format.html
     # treinar_classificador(com_tratamento=True, utiliza_stemmer=False, utilizar_TFIDF=True, utilizar_ngramas=True)
     print('Acurácia com tratamento do texto e utilizaçao de TF-IDF COM NGRAM(1,2): %.2f%%'
-          % (treinar_classificador() * 100))
+          % (treinar_classificador(
+        maximo_palavras=max_palavras
+
+    ) * 100))
+
+
+inicio_teste_1 = time.time()
 
 testar_configuracoes_treinamento()
+
+tempo_execucao_teste_1 = time.time() - inicio_teste_1
+print('-----Tempo de execução do teste para 50 palavras no treinamento: %s segundos' % tempo_execucao_teste_1)
+
+# In[6]:
+
+
+inicio_teste_2 = time.time()
+
+testar_configuracoes_treinamento(max_palavras=500)
+
+tempo_execucao_teste_2 = time.time() - inicio_teste_2
+print('-----Tempo de execução do teste para 500 palavras no treinamento: %s segundos' % tempo_execucao_teste_2)
+
+# In[8]:
+
+
+inicio_teste_3 = time.time()
+
+testar_configuracoes_treinamento(max_palavras=1000)
+
+tempo_execucao_teste_3 = time.time() - inicio_teste_3
+print('-----Tempo de execução do teste para 1.000 palavras no treinamento: %s segundos' % tempo_execucao_teste_2)
+
+# In[7]:
+
 
 tempo_execucao = time.time() - start_time
 print('-----Tempo de execução: %s segundos' % tempo_execucao)
