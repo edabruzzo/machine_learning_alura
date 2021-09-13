@@ -5,6 +5,7 @@
 
 
 import pandas as pd
+from pandas import Series
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.linear_model import LogisticRegression
@@ -21,7 +22,7 @@ import nltk
 from nltk import tokenize
 from nltk.corpus import stopwords
 
-nltk.download('all')
+#nltk.download('all')
 
 # In[2]:
 
@@ -48,12 +49,11 @@ resenhas_imdb['classificacao'] = resenhas_imdb['sentiment'].replace(['neg', 'pos
 # In[21]:
 
 
-def treinar_classificador(com_tratamento=True):
-    vetorizador = CountVectorizer(lowercase=False, max_features=400)
+def treinar_classificador(com_tratamento=True, utiliza_stemmer=False, utilizar_TFIDF=True, utilizar_ngramas=True):
 
     tamanho_texto_integral = len(resenhas_imdb['text_pt'])
 
-    if com_tratamento == True:
+    if com_tratamento:
 
         palavras_irrelevantes = nltk.corpus.stopwords.words("portuguese")
         from string import punctuation
@@ -67,36 +67,68 @@ def treinar_classificador(com_tratamento=True):
 
     # tokenizador = tokenize.WhitespaceTokenizer()
     tokenizador = tokenize.WordPunctTokenizer()
+    stemmer = nltk.stem.RSLPStemmer()
+
+    if utilizar_TFIDF:
+
+        from sklearn.feature_extraction.text import TfidfVectorizer
+        if utilizar_ngramas:
+            tf_idf = TfidfVectorizer(lowercase=False, max_features=500, ngram_range=(1,2))
+        else:
+            tf_idf = TfidfVectorizer(lowercase=False, max_features=500)
+
+
+    else:
+        vetorizador = CountVectorizer(lowercase=False, max_features=500)
+
+
 
     # Retirada de acentos
     import unidecode
 
-    for opiniao in resenhas_imdb.text_pt:
-        palavras_texto = tokenizador.tokenize(opiniao)
+    jah_houve_tratamento_previo = 'texto_pt_tratado' in resenhas_imdb.columns
 
-        if com_tratamento == True:
-            nova_frase = [unidecode.unidecode(palavra) for palavra in palavras_texto if
-                          palavra not in palavras_irrelevantes]
-        else:
-            nova_frase = [palavra for palavra in palavras_texto if palavra not in palavras_irrelevantes]
+    if ((com_tratamento and not jah_houve_tratamento_previo) or com_tratamento == False):
 
-        frase_processada.append(' '.join(nova_frase))
+        if not jah_houve_tratamento_previo:
+           print('Necessário inicializar o tratamento no primeiro teste')
 
-    if com_tratamento == True:
-        resenhas_imdb["texto_pt_tratado"] = frase_processada
+        for opiniao in resenhas_imdb.text_pt:
+
+            palavras_texto = tokenizador.tokenize(opiniao)
+
+            if com_tratamento:
+
+                if utiliza_stemmer:
+                    nova_frase = [stemmer.stem(unidecode.unidecode(palavra).lower()) for palavra in palavras_texto if
+                              palavra not in palavras_irrelevantes]
+                else:
+                    nova_frase = [unidecode.unidecode(palavra).lower() for palavra in palavras_texto if
+                                  palavra not in palavras_irrelevantes]
+            else:
+                nova_frase = [palavra for palavra in palavras_texto if palavra not in palavras_irrelevantes]
+
+            frase_processada.append(' '.join(nova_frase))
+
+    if com_tratamento:
+        if not jah_houve_tratamento_previo:
+            resenhas_imdb["texto_pt_tratado"] = frase_processada
         texto = 'texto_pt_tratado'
 
     else:
         texto = 'text_pt'
 
-    bag_of_words = vetorizador.fit_transform(resenhas_imdb[texto])
+    if utilizar_TFIDF:
+        matriz_treinamento = tf_idf.fit_transform(resenhas_imdb[texto])
+    else:
+        matriz_treinamento = vetorizador.fit_transform(resenhas_imdb[texto])
 
     '''
     matriz_esparsa = pd.DataFrame.sparse.from_spmatrix(bag_of_words,
                                                       columns=vetorizador.get_feature_names())
     '''
 
-    treino, teste, classe_treino, classe_teste = train_test_split(bag_of_words,
+    treino, teste, classe_treino, classe_teste = train_test_split(matriz_treinamento,
                                                                   resenhas_imdb.classificacao,
                                                                   random_state=42)
 
@@ -109,35 +141,30 @@ def treinar_classificador(com_tratamento=True):
     return acuracia
 
 
-# ## Testando acurácia sem tratamento do texto
-
-# In[22]:
+def testar_configuracoes_treinamento():
 
 
-# https://www.ic.unicamp.br/~mc102/mc102-1s2019/labs/format.html
-'''
-Testando acurácia sem tratamento do texto
+    # https://www.ic.unicamp.br/~mc102/mc102-1s2019/labs/format.html
+    print('Acurácia sem tratamento do texto e sem tf-idf: %.2f%%'
+          % (treinar_classificador(com_tratamento=False,utilizar_TFIDF=False) * 100))
 
-'''
-print('Acurácia %.2f%%' % (treinar_classificador(com_tratamento=False) * 100))
+    # https://www.ic.unicamp.br/~mc102/mc102-1s2019/labs/format.html
+    print('Acurácia sem tratamento do texto e com tf_idf: %.2f%%'
+          % (treinar_classificador(com_tratamento=False, utilizar_TFIDF=True) * 100))
 
-# In[24]:
+    # https://www.ic.unicamp.br/~mc102/mc102-1s2019/labs/format.html
+    print('Acurácia com tratamento do texto e utilizaçao de TF-IDF SEM NGRAM(1,2): %.2f%%'
+          % (treinar_classificador(com_tratamento=True,
+                                   utiliza_stemmer=False,
+                                   utilizar_TFIDF=True,
+                                   utilizar_ngramas=False) * 100))
 
+    # https://www.ic.unicamp.br/~mc102/mc102-1s2019/labs/format.html
+    # treinar_classificador(com_tratamento=True, utiliza_stemmer=False, utilizar_TFIDF=True, utilizar_ngramas=True)
+    print('Acurácia com tratamento do texto e utilizaçao de TF-IDF COM NGRAM(1,2): %.2f%%'
+          % (treinar_classificador() * 100))
 
-resenhas_imdb["text_pt"]
-
-# ## Testando acurácia com tratamento do texto
-
-# In[23]:
-
-
-# https://www.ic.unicamp.br/~mc102/mc102-1s2019/labs/format.html
-print('Acurácia %.2f%%' % (treinar_classificador() * 100))
-
-resenhas_imdb["texto_pt_tratado"]
-
-# In[6]:
-
+testar_configuracoes_treinamento()
 
 tempo_execucao = time.time() - start_time
 print('-----Tempo de execução: %s segundos' % tempo_execucao)
